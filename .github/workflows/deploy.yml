@@ -1,0 +1,37 @@
+name: CI/CD Pipeline for Secure File Transfer App
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.12'
+
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt
+
+    - name: Build Docker image
+      run: |
+        docker build -t secure-file-transfer .
+
+    - name: SSH into Oracle instance and deploy
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.ORACLE_INSTANCE_IP }}
+        username: ubuntu
+        key: ${{ secrets.ORACLE_SSH_KEY }}
+        script: |
+          docker pull secure-file-transfer
+          docker run -d -p 5000:5000 secure-file-transfer
