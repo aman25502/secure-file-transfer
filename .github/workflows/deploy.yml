@@ -18,10 +18,12 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Add current user to docker group and refresh session
+      - name: Install Docker
         run: |
-          sudo usermod -aG docker $USER
-          newgrp docker
+          sudo apt-get update
+          sudo apt-get install -y docker.io
+          sudo systemctl start docker
+          sudo systemctl enable docker
 
       - name: Build the Docker image
         run: docker build -t secure-file-transfer .
@@ -30,13 +32,13 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no -i ./id_rsa ubuntu@${{ secrets.ORACLE_CLOUD_IP }} << EOF
             # Ensure the directory exists
-            #mkdir -p /home/ubuntu/secure-file-transfer
-            git clone https://github.com/aman25502/secure-file-transfer secure-file-transfer
+            mkdir -p /home/ubuntu/secure-file-transfer
             cd /home/ubuntu/secure-file-transfer
 
-            # Stop and remove any existing container
+            # Clean up any existing container and image
             sudo docker stop secure-file-transfer || true
             sudo docker rm secure-file-transfer || true
+            sudo docker rmi secure-file-transfer || true
 
             # Run the new container
             sudo docker run -d -p 8080:8080 --name secure-file-transfer secure-file-transfer
