@@ -28,7 +28,6 @@ jobs:
             # Clone the repository if it doesn't already exist
             if [ ! -d ".git" ]; then
               git clone https://github.com/aman25502/secure-file-transfer .
-              git pull origin main
             fi
 
             # Build the Docker image
