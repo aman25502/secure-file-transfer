@@ -1,30 +1,25 @@
-# Use official Python image as base
-FROM python:3.9-slim
+# Use the official Python image from the Docker Hub
+FROM python:3.8-slim
 
-# Create the Docker group if it doesn't exist
-sudo groupadd docker
+# Set environment variables
+ENV FLASK_APP=app.py
+ENV FLASK_RUN_HOST=0.0.0.0
+ENV FLASK_RUN_PORT=8080
 
-# Add your current user to the Docker group
-sudo usermod -aG docker $USER
-
-# Apply the new group membership
-newgrp docker
-
-
-# Set working directory inside the container
+# Set the working directory in the container
 WORKDIR /app
 
-# Copy requirements.txt into the container at /app
+# Copy the requirements file into the container
 COPY requirements.txt .
 
-# Install Python dependencies
+# Install the dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the current directory contents into the container at /app
+# Copy the rest of the application code into the container
 COPY . .
 
-# Expose port 8080 for the web server
+# Expose the port the app runs on
 EXPOSE 8080
 
-# Command to run the application
-CMD ["python", "app.py"]
+# Run the application
+CMD ["flask", "run"]
