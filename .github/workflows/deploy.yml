@@ -26,20 +26,19 @@ jobs:
       run: |
         docker build -t secure-file-transfer .
 
+    - name: Set up SSH key
+      run: |
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ./id_rsa
+        chmod 600 ./id_rsa
+
     - name: Deploy to Oracle Cloud
       env:
-        SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         ORACLE_CLOUD_INSTANCE_IP: ${{ secrets.ORACLE_CLOUD_INSTANCE_IP }}
       run: |
-        ssh -o StrictHostKeyChecking=no -i ${{ secrets.SSH_PRIVATE_KEY }} opc@${{ secrets.ORACLE_CLOUD_INSTANCE_IP }} << EOF
-          # Pull the latest changes
+        ssh -o StrictHostKeyChecking=no -i ./id_rsa opc@${{ secrets.ORACLE_CLOUD_INSTANCE_IP }} << EOF
           cd ~/secure-file-transfer
           git pull
-          
-          # Stop existing Docker container
           docker stop $(docker ps -q --filter ancestor=secure-file-transfer) || true
-          
-          # Build and run the Docker container
           docker build -t secure-file-transfer .
           docker run -d -p 80:8080 secure-file-transfer
         EOF
