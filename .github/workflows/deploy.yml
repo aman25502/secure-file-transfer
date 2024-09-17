@@ -18,28 +18,27 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Install Docker
-        run: |
-          sudo systemctl start docker
-          sudo systemctl enable docker
-
-      - name: Build the Docker image
-        run: docker build -t secure-file-transfer .
-
-      - name: Deploy the container
+      - name: Deploy to Oracle Cloud
         run: |
           ssh -o StrictHostKeyChecking=no -i ./id_rsa ubuntu@${{ secrets.ORACLE_CLOUD_IP }} << EOF
-            # Ensure the directory exists
+            # Ensure the directory exists and navigate to it
             mkdir -p /home/ubuntu/secure-file-transfer
             cd /home/ubuntu/secure-file-transfer
 
-            # Clean up any existing container and image
+            # Clone the repository if it doesn't already exist
+            if [ ! -d ".git" ]; then
+              git clone https://github.com/aman25502/secure-file-transfer .
+              git pull origin main
+            fi
+
+            # Build the Docker image
+            sudo systemctl start docker
+            sudo systemctl enable docker
+            sudo docker build -t secure-file-transfer .
+
+            # Stop and remove any existing container
             sudo docker stop secure-file-transfer || true
             sudo docker rm secure-file-transfer || true
-            sudo docker rmi secure-file-transfer || true
-
-            # Build the Docker image on the server if not available
-            sudo docker pull secure-file-transfer || true
 
             # Run the new container
             sudo docker run -d -p 8080:8080 --name secure-file-transfer secure-file-transfer
