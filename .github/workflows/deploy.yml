@@ -22,6 +22,7 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no -i ./id_rsa ubuntu@${{ secrets.ORACLE_CLOUD_IP }} << EOF
             # Ensure the directory exists and navigate to it
+            sudo rm -rf secure-file-transfer
             mkdir -p /home/ubuntu/secure-file-transfer
             cd /home/ubuntu/secure-file-transfer
 
