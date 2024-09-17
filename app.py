@@ -98,4 +98,4 @@ def send_email(sender_email, receiver_email, file_path, key):
     mail.send(msg)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8080, debug=True)
+    app.run(host='0.0.0.0', port=80, debug=True)
