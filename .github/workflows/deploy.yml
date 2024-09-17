@@ -30,16 +30,16 @@ jobs:
             if [ ! -d ".git" ]; then
               git clone https://github.com/aman25502/secure-file-transfer .
             fi
-
+            
             # Build the Docker image
             sudo systemctl start docker
-            sudo systemctl enable docker
-            sudo docker build -t secure-file-transfer .
+            sudo systemctl enable docker            
+            docker build -t secure-file-transfer .
 
             # Stop and remove any existing container
-            sudo docker stop secure-file-transfer || true
-            sudo docker rm secure-file-transfer || true
+            docker stop secure-file-transfer || true
+            docker rm secure-file-transfer || true
 
             # Run the new container
-            sudo docker run -d -p 8080:8080 --name secure-file-transfer secure-file-transfer
+            docker run -d -p 8080:8080 --name secure-file-transfer secure-file-transfer
           EOF
