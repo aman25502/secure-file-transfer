@@ -1,6 +1,16 @@
 # Use official Python image as base
 FROM python:3.9-slim
 
+# Create the Docker group if it doesn't exist
+sudo groupadd docker
+
+# Add your current user to the Docker group
+sudo usermod -aG docker $USER
+
+# Apply the new group membership
+newgrp docker
+
+
 # Set working directory inside the container
 WORKDIR /app
 
