@@ -35,7 +35,7 @@ jobs:
       env:
         ORACLE_CLOUD_INSTANCE_IP: ${{ secrets.ORACLE_CLOUD_INSTANCE_IP }}
       run: |
-        ssh -o StrictHostKeyChecking=no -i ./id_rsa opc@${{ secrets.ORACLE_CLOUD_INSTANCE_IP }} << EOF
+        ssh -o StrictHostKeyChecking=no -i ./id_rsa ubuntu@${{ secrets.ORACLE_CLOUD_INSTANCE_IP }} << EOF
           cd ~/secure-file-transfer
           git pull
           docker stop $(docker ps -q --filter ancestor=secure-file-transfer) || true
