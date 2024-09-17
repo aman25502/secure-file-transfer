@@ -18,6 +18,13 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
+      - name: Install Docker
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker.io
+          sudo systemctl start docker
+          sudo systemctl enable docker
+
       - name: Build the Docker image
         run: docker build -t secure-file-transfer .
 
@@ -32,6 +39,9 @@ jobs:
             sudo docker stop secure-file-transfer || true
             sudo docker rm secure-file-transfer || true
             sudo docker rmi secure-file-transfer || true
+
+            # Build the Docker image on the server if not available
+            sudo docker pull secure-file-transfer || true
 
             # Run the new container
             sudo docker run -d -p 8080:8080 --name secure-file-transfer secure-file-transfer
