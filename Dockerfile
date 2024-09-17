@@ -1,23 +1,26 @@
-# Use the official Python image as a parent image
+# Use the official Python image from the Docker Hub
 FROM python:3.9-slim
 
-# Set environment variables
-ENV FLASK_APP=app.py
-ENV FLASK_RUN_HOST=0.0.0.0
-ENV FLASK_RUN_PORT=8080
+# Set environment variables to avoid buffering
+ENV PYTHONUNBUFFERED=1
 
-# Set the working directory
+# Create and set the working directory
 WORKDIR /app
 
-# Copy the requirements.txt file and install dependencies
-COPY requirements.txt requirements.txt
-RUN pip install -r requirements.txt
+# Copy the requirements file into the container
+COPY requirements.txt /app/
 
-# Copy the rest of the application code
-COPY . .
+# Install the dependencies
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Expose the port that the app runs on
+# Copy the rest of the application code into the container
+COPY . /app/
+
+# Expose port 8080 to the outside world
 EXPOSE 8080
 
-# Define the command to run the application
-CMD ["flask", "run"]
+# Set the environment variable for Flask
+ENV FLASK_APP=app.py
+
+# Run the Flask application
+CMD ["flask", "run", "--host=0.0.0.0", "--port=8080"]
