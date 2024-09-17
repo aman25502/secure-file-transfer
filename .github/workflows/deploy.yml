@@ -1,4 +1,4 @@
-name: CI/CD Pipeline for Secure File Transfer App
+name: Deploy to Oracle Cloud
 
 on:
   push:
@@ -6,17 +6,17 @@ on:
       - main
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
-        python-version: '3.12'
+        python-version: '3.9'
 
     - name: Install dependencies
       run: |
@@ -26,12 +26,20 @@ jobs:
       run: |
         docker build -t secure-file-transfer .
 
-    - name: SSH into Oracle instance and deploy
-      uses: appleboy/ssh-action@master
-      with:
-        host: ${{ secrets.ORACLE_INSTANCE_IP }}
-        username: ubuntu
-        key: ${{ secrets.ORACLE_SSH_KEY }}
-        script: |
-          docker pull secure-file-transfer
-          docker run -d -p 5000:5000 secure-file-transfer
+    - name: Deploy to Oracle Cloud
+      env:
+        SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        ORACLE_CLOUD_INSTANCE_IP: ${{ secrets.ORACLE_CLOUD_INSTANCE_IP }}
+      run: |
+        ssh -o StrictHostKeyChecking=no -i ${{ secrets.SSH_PRIVATE_KEY }} opc@${{ secrets.ORACLE_CLOUD_INSTANCE_IP }} << EOF
+          # Pull the latest changes
+          cd ~/secure-file-transfer
+          git pull
+          
+          # Stop existing Docker container
+          docker stop $(docker ps -q --filter ancestor=secure-file-transfer) || true
+          
+          # Build and run the Docker container
+          docker build -t secure-file-transfer .
+          docker run -d -p 80:8080 secure-file-transfer
+        EOF
