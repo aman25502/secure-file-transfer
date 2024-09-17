@@ -1,13 +1,14 @@
 from flask import Flask, request, redirect, url_for, flash, render_template
-from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required
+from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from werkzeug.utils import secure_filename
 import os
-from cryptography.fernet import Fernet
-from flask_mail import Mail, Message
 import logging
+from cryptography.fernet import Fernet
+from logging.handlers import RotatingFileHandler
+from flask_mail import Mail, Message
 
 app = Flask(__name__)
-app.secret_key = os.urandom(24)  # Generate secret key
+app.secret_key = Fernet.generate_key().decode()  # Generate a strong secret key
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16 MB limit
 
@@ -20,6 +21,13 @@ app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USE_SSL'] = False
 
 mail = Mail(app)
+
+# Set up logging
+if not os.path.exists('logs'):
+    os.makedirs('logs')
+handler = RotatingFileHandler('logs/app.log', maxBytes=10000, backupCount=1)
+handler.setLevel(logging.INFO)
+app.logger.addHandler(handler)
 
 # User authentication setup
 login_manager = LoginManager()
@@ -72,8 +80,8 @@ def upload_file():
             f.write(encrypted_file)
 
         # Send email
-        send_email(request.form['receiver_email'], encrypted_file_path, key.decode())
-        flash('File successfully uploaded and encrypted')
+        send_email(current_user.id, request.form['receiver_email'], encrypted_file_path, key.decode())
+        flash('File successfully uploaded, encrypted, and sent to the recipient.')
         return redirect(url_for('index'))
     flash('File type or size not allowed')
     return redirect(url_for('index'))
@@ -82,9 +90,9 @@ def allowed_file(filename):
     allowed_extensions = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in allowed_extensions
 
-def send_email(receiver_email, file_path, key):
-    msg = Message('Encrypted File', sender=app.config['MAIL_USERNAME'], recipients=[receiver_email])
-    msg.body = f'Please find the encrypted file attached. The decryption key is: {key}'
+def send_email(sender_email, receiver_email, file_path, key):
+    msg = Message('Encrypted File', sender=sender_email, recipients=[receiver_email])
+    msg.body = 'Please find the encrypted file attached. The decryption key is: {}'.format(key)
     with app.open_resource(file_path) as fp:
         msg.attach(file_path, 'application/octet-stream', fp.read())
     mail.send(msg)
