@@ -1,50 +1,33 @@
 body {
     font-family: Arial, sans-serif;
-    background-color: #f0f0f0;
-    margin: 0;
+    margin: 20px;
     padding: 0;
 }
 
-.container {
-    width: 80%;
-    margin: auto;
-    overflow: hidden;
+h1 {
+    color: #333;
 }
 
-header {
-    background: #333;
-    color: #fff;
-    padding-top: 30px;
-    min-height: 70px;
-    border-bottom: #77A9C5 3px solid;
+form {
+    margin-bottom: 20px;
 }
 
-header a {
-    color: #fff;
-    font-size: 17px;
-    text-decoration: none;
-    text-transform: uppercase;
-    margin-right: 15px;
+input[type="file"],
+input[type="email"],
+input[type="text"],
+input[type="submit"] {
+    display: block;
+    margin: 10px 0;
 }
 
-header ul {
-    padding: 0;
-    list-style: none;
-}
-
-header ul li {
-    display: inline;
-}
-
-button {
-    padding: 10px 15px;
-    background-color: #77A9C5;
-    border: none;
+input[type="submit"] {
+    background-color: #4CAF50;
     color: white;
+    border: none;
+    padding: 10px;
     cursor: pointer;
-    margin-top: 10px;
 }
 
-button:hover {
-    background-color: #555;
+input[type="submit"]:hover {
+    background-color: #45a049;
 }
