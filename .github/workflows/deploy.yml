@@ -30,7 +30,8 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no -i ./id_rsa ubuntu@${{ secrets.ORACLE_CLOUD_IP }} << EOF
             # Ensure the directory exists
-            mkdir -p /home/ubuntu/secure-file-transfer
+            #mkdir -p /home/ubuntu/secure-file-transfer
+            git clone https://github.com/aman25502/secure-file-transfer secure-file-transfer
             cd /home/ubuntu/secure-file-transfer
 
             # Stop and remove any existing container
