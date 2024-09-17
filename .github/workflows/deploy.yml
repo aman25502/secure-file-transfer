@@ -10,49 +10,40 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    # Step 1: Checkout the code
-    - name: Checkout code
-      uses: actions/checkout@v2
+      - name: Checkout the code
+        uses: actions/checkout@v3
 
-    # Step 2: Set up SSH key
-    - name: Setup SSH
-      uses: webfactory/ssh-agent@v0.5.3
-      with:
-        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: Set up SSH agent
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-    - name: Add current user to docker group and refresh session
-      run: |
-        sudo usermod -aG docker $USER
-        newgrp docker
+      - name: Install Docker
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker.io
+          sudo systemctl start docker
+          sudo systemctl enable docker
 
-    # Step 3: Deploy to Oracle Cloud Instance
-    - name: Deploy to Oracle Cloud
-      env:
-        ORACLE_CLOUD_INSTANCE_IP: ${{ secrets.ORACLE_CLOUD_INSTANCE_IP }}
-      run: |
-        ssh -o StrictHostKeyChecking=no -i ./id_rsa ubuntu@${{ secrets.ORACLE_CLOUD_INSTANCE_IP }} << EOF
-          # Create project directory if it doesn't exist
-          mkdir -p ~/secure-file-transfer
-          cd ~/secure-file-transfer
+      - name: Add current user to docker group and refresh session
+        run: |
+          sudo usermod -aG docker $USER
+          newgrp docker
 
-          # Clone or update the repo
-          if [ ! -d .git ]; then
-            git clone https://github.com/aman25502/secure-file-transfer.git .
-          else
-            git pull
-          fi
+      - name: Build the Docker image
+        run: docker build -t secure-file-transfer .
 
-          # Install Docker if not already installed
-          if ! command -v docker &> /dev/null
-          then
-            sudo apt update
-            sudo apt install -y docker.io
-            sudo systemctl start docker
-            sudo systemctl enable docker
-          fi
+      - name: Deploy the container
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ./id_rsa ubuntu@${{ secrets.ORACLE_CLOUD_IP }} << EOF
+            # Ensure the directory exists
+            mkdir -p /home/ubuntu/secure-file-transfer
+            cd /home/ubuntu/secure-file-transfer
 
-          # Build the Docker image and deploy the application
+            # Stop and remove any existing container
             sudo docker stop secure-file-transfer || true
             sudo docker rm secure-file-transfer || true
-            sudo docker run -d -p 80:8080 --name secure-file-transfer secure-file-transfer
-        EOF
+
+            # Run the new container
+            sudo docker run -d -p 8080:8080 --name secure-file-transfer secure-file-transfer
+          EOF
